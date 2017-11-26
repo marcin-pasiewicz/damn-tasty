@@ -86,7 +86,7 @@ exports.updateStore = async (req, res) => {
 };
 
 exports.getStoreBySlug = async (req, res, next) => {
-  const store = await Store.findOne({ slug: req.params.slug }).populate('author');
+  const store = await Store.findOne({ slug: req.params.slug }).populate('author reviews');
   if (!store) return next();
   res.render('store', { store, title: store.name });
 };
@@ -124,7 +124,6 @@ exports.searchStores = async (req, res) => {
 };
 
 exports.mapStores = async (req, res) => {
-  // res.json({ id: 'it works'})
   const coordinates = [req.query.lng, req.query.lat].map(parseFloat);
   const q = {
     location: {
@@ -133,7 +132,7 @@ exports.mapStores = async (req, res) => {
           type: 'Point',
           coordinates
         },
-         $maxDistance: 10000 //10 km
+        $maxDistance: 10000 // 10km
       }
     }
   };
@@ -143,23 +142,24 @@ exports.mapStores = async (req, res) => {
 };
 
 exports.mapPage = (req, res) => {
-    res.render('map', { title: 'Map' });
+  res.render('map', { title: 'Map' });
 };
 
 exports.heartStore = async (req, res) => {
   const hearts = req.user.hearts.map(obj => obj.toString());
+
   const operator = hearts.includes(req.params.id) ? '$pull' : '$addToSet';
   const user = await User
-      .findByIdAndUpdate(req.user._id,
-        { [operator]: { hearts: req.params.id} },
-        { new: true }
-      );
+    .findByIdAndUpdate(req.user._id,
+      { [operator]: { hearts: req.params.id } },
+      { new: true }
+    );
   res.json(user);
 };
 
 exports.getHearts = async (req, res) => {
-   const stores = await Store.find({
-        _id: { $in: req.user.hearts }
-    });
+  const stores = await Store.find({
+    _id: { $in: req.user.hearts }
+  });
   res.render('stores', { title: 'Hearted Stores', stores });
 };
